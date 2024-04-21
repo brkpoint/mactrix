@@ -24,6 +24,7 @@ using namespace std;
 #define BOLDWHITE   "\033[1m\033[37m"
 
 int main() {
+    cout << "\x1b[?25l" << flush;
     cout << GREEN;
 
     system("clear");
@@ -35,15 +36,13 @@ int main() {
         system("clear");
 
         for (int j = 0; j < w.ws_row; j++) {
-            for (int i = 0; i < w.ws_col; i++) {
-                cout << "a";
-            }
-            cout << "\n";
+            printf("\033[%d;%dH%s\n", j, 1, "a");
         }
     }
 
     system("clear");
 
     cout << RESET;
+    cout << "\x1b[?25h" << flush;
     return 0;
 }
