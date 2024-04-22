@@ -23,6 +23,8 @@ using namespace std;
 #define BOLDCYAN    "\033[1m\033[36m"
 #define BOLDWHITE   "\033[1m\033[37m"
 
+unsigned int microsecond = 1000000;
+
 int main() {
     cout << "\x1b[?25l" << flush;
     cout << GREEN;
@@ -32,12 +34,20 @@ int main() {
     struct winsize w;
     ioctl(0, TIOCGWINSZ, &w);
 
+    int pos = 0;
+
     while (true) {
         system("clear");
+        ioctl(0, TIOCGWINSZ, &w);
 
-        for (int j = 0; j < w.ws_row; j++) {
-            printf("\033[%d;%dH%s\n", j, 1, "a");
+        pos++;
+        printf("\033[%d;%dH%s\n", pos, 1, "a");
+
+        if (pos == w.ws_row) {
+            pos = 0;
         }
+
+        usleep(150000);
     }
 
     system("clear");
