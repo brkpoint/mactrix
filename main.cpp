@@ -5,29 +5,34 @@
 
 using namespace std;
 
-#define RESET   "\033[0m"
-#define BLACK   "\033[30m"
-#define RED     "\033[31m"
-#define GREEN   "\033[32m"
-#define YELLOW  "\033[33m"
-#define BLUE    "\033[34m"
-#define MAGENTA "\033[35m"
-#define CYAN    "\033[36m"
-#define WHITE   "\033[37m"
-#define BOLDBLACK   "\033[1m\033[30m"
-#define BOLDRED     "\033[1m\033[31m"
-#define BOLDGREEN   "\033[1m\033[32m"
-#define BOLDYELLOW  "\033[1m\033[33m"      
-#define BOLDBLUE    "\033[1m\033[34m"    
-#define BOLDMAGENTA "\033[1m\033[35m"
-#define BOLDCYAN    "\033[1m\033[36m"
-#define BOLDWHITE   "\033[1m\033[37m"
-
 unsigned int microsecond = 1000000;
 
+/*
+\033[38;2;<r>;<g>;<b>m   Select RGB foreground color
+\033[48;2;<r>;<g>;<b>m   Select RGB background color
+*/
+
+template <typename T>
+T clip(const T& n, const T& lower, const T& upper) {
+  return max(lower, min(n, upper));
+}
+
+void color(bool fob, int r, int g, int b) {
+    clip(r, 0, 255);
+    clip(g, 0, 255);
+    clip(b, 0, 255);
+
+    if (fob) {
+        printf("\033[38;2;%d;%d;%dm", r, g, b);
+        return;
+    }
+
+    printf("\033[48;2;%d;%d;%dm", r, g, b);
+}
+
 int main() {
-    cout << "\x1b[?25l" << flush;
-    cout << GREEN;
+    cout << "\x1b[?25l" << flush; // hide cursor
+    color(true, 20, 180, 60);
 
     system("clear");
 
@@ -35,15 +40,29 @@ int main() {
     ioctl(0, TIOCGWINSZ, &w);
 
     int pos = 0;
+    int length = 5;
 
     while (true) {
         system("clear");
         ioctl(0, TIOCGWINSZ, &w);
 
         pos++;
-        printf("\033[%d;%dH%s\n", pos, 1, "a");
+        if (pos > 0) {
+            for (int i = 0; i < length; i++) {
+                if (pos - i < 0) break;
+                if (pos - i >= w.ws_row - 1) continue;
 
-        if (pos == w.ws_row) {
+                color(true, 30 - i, 255 - i, 60 - i);
+                printf("\033[%d;%dH%s\n", pos - i, 1, "a");
+            }
+
+            if (pos < w.ws_row - 1) {
+                color(true, 255, 255, 255);
+                printf("\033[%d;%dH%s\n", pos, 1, "a");
+            }
+        }
+
+        if (pos - length >= w.ws_row - 1) {
             pos = 0;
         }
 
@@ -52,7 +71,7 @@ int main() {
 
     system("clear");
 
-    cout << RESET;
-    cout << "\x1b[?25h" << flush;
+    cout << "\033[0m"; // reset colors
+    cout << "\x1b[?25h" << flush; // show cursor
     return 0;
 }
