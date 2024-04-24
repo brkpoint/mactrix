@@ -32,7 +32,7 @@ void color(bool fob, int r, int g, int b) {
 
 int main() {
     cout << "\x1b[?25l" << flush; // hide cursor
-    color(true, 20, 180, 60);
+    color(true, 20, 255, 60);
 
     system("clear");
 
@@ -40,7 +40,7 @@ int main() {
     ioctl(0, TIOCGWINSZ, &w);
 
     int pos = 0;
-    int length = 5;
+    int length = 8;
 
     while (true) {
         system("clear");
@@ -52,7 +52,7 @@ int main() {
                 if (pos - i < 0) break;
                 if (pos - i >= w.ws_row - 1) continue;
 
-                color(true, 30 - i, 255 - i, 60 - i);
+                color(true, 30, 255, 60);
                 printf("\033[%d;%dH%s\n", pos - i, 1, "a");
             }
 
