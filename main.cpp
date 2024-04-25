@@ -64,6 +64,9 @@ int main() {
 
     int length = 0;
     vector<coordinates*> matrixTrails;
+
+    random_device dev;
+    mt19937 rng(dev());
     
     while (true) {
         system("clear");
@@ -76,7 +79,11 @@ int main() {
             printf(string(w.ws_col, ' ').c_str());
         }
 
-        matrixTrails.push_back(new coordinates(rand() % w.ws_col, rand() % -4));
+        uniform_int_distribution<mt19937::result_type> xrandom(0, w.ws_col);
+        uniform_int_distribution<mt19937::result_type> yrandom(-5, 0);
+
+        matrixTrails.push_back(new coordinates(xrandom(rng), yrandom(rng)));
+        matrixTrails.push_back(new coordinates(xrandom(rng), yrandom(rng)));
 
         for (int i = 0; i < matrixTrails.size(); i++) {
             matrixTrails[i]->y++;
