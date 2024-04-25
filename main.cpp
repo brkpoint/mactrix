@@ -1,4 +1,5 @@
 #include <iostream>
+#include <random>
 #include <vector>
 #include <array>
 #include <sys/ioctl.h>
@@ -43,6 +44,15 @@ void color(bool fob, int r, int g, int b) {
     printf("\033[48;2;%d;%d;%dm", r, g, b);
 }
 
+void printToCoords(coordinates* coords, const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    printf("\033[%d;%dH", coords->x, coords->y);
+    vprintf(format, args);
+    va_end(args);
+    fflush(stdout);
+}
+
 int main() {
     cout << "\x1b[?25l" << flush; // hide cursor
     color(true, 255, 255, 255);
@@ -50,17 +60,23 @@ int main() {
     system("clear");
 
     struct winsize w;
+    int frame = 0;
 
-    // int pos = 0;
     int length = 0;
     vector<coordinates*> matrixTrails;
-    matrixTrails.push_back(new coordinates(1, 0));
-
+    
     while (true) {
         system("clear");
         ioctl(0, TIOCGWINSZ, &w);
 
+        frame++;
         length = w.ws_row / 2;
+
+        for (int i = 0; i < w.ws_row - 1; i++) {
+            printf(string(w.ws_col, ' ').c_str());
+        }
+
+        matrixTrails.push_back(new coordinates(rand() % w.ws_col, rand() % -4));
 
         for (int i = 0; i < matrixTrails.size(); i++) {
             matrixTrails[i]->y++;
@@ -75,17 +91,21 @@ int main() {
                 continue;
             }
 
-            if (matrixTrails[i]->y < w.ws_row) {
-                color(true, 255, 255, 255);
-                printf("\033[%d;%dH%s\n", matrixTrails[i]->y, matrixTrails[i]->x, "a");
-            }
-
             for (int j = 0; j < length; j++) {
-                if (matrixTrails[i]->y - j < 0) break;
-                if (matrixTrails[i]->y - j >= w.ws_row) continue;
+                coordinates* tcoords = new coordinates(matrixTrails[i]->x, matrixTrails[i]->y - j - 1);
+
+                if (tcoords->y - 1 < 0) break;
+                if (tcoords->y >= w.ws_row) continue;
 
                 color(true, 30, 180, 60);
-                printf("\033[%d;%dH%s\n", matrixTrails[i]->y - j - 1, matrixTrails[i]->x, "a");
+                //printToCoords(tcoords, "%s", "a");
+                printf("\033[%d;%dH%s\n", tcoords->y, tcoords->x, "a");
+            }
+
+            if (matrixTrails[i]->y < w.ws_row) {
+                color(true, 255, 255, 255);
+                //printToCoords(matrixTrails[i], "%s", "a");
+                printf("\033[%d;%dH%s\n", matrixTrails[i]->y, matrixTrails[i]->x, "a");
             }
         }
 
