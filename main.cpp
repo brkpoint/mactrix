@@ -85,7 +85,7 @@ int main() {
                 if (matrixTrails[i]->y - j >= w.ws_row) continue;
 
                 color(true, 30, 180, 60);
-                printf("\033[%d;%dH%s\n", matrixTrails[i]->y - j, matrixTrails[i]->x, "a");
+                printf("\033[%d;%dH%s\n", matrixTrails[i]->y - j - 1, matrixTrails[i]->x, "a");
             }
         }
 
