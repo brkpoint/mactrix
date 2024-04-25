@@ -1,4 +1,6 @@
 #include <iostream>
+#include <vector>
+#include <array>
 #include <sys/ioctl.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -7,15 +9,26 @@ using namespace std;
 
 unsigned int microsecond = 1000000;
 
+template <typename T>
+T clip(const T& n, const T& lower, const T& upper) {
+  return max(lower, min(n, upper));
+}
+
 /*
 \033[38;2;<r>;<g>;<b>m   Select RGB foreground color
 \033[48;2;<r>;<g>;<b>m   Select RGB background color
 */
 
-template <typename T>
-T clip(const T& n, const T& lower, const T& upper) {
-  return max(lower, min(n, upper));
-}
+class coordinates {
+    public:
+        int x;
+        int y;
+        
+        coordinates(int x, int y) {
+            this->x = x;
+            this->y = y;
+        }
+};
 
 void color(bool fob, int r, int g, int b) {
     clip(r, 0, 255);
@@ -32,41 +45,51 @@ void color(bool fob, int r, int g, int b) {
 
 int main() {
     cout << "\x1b[?25l" << flush; // hide cursor
-    color(true, 20, 255, 60);
+    color(true, 255, 255, 255);
 
     system("clear");
 
     struct winsize w;
-    ioctl(0, TIOCGWINSZ, &w);
 
-    int pos = 0;
-    int length = 8;
+    // int pos = 0;
+    int length = 0;
+    vector<coordinates*> matrixTrails;
+    matrixTrails.push_back(new coordinates(1, 0));
 
     while (true) {
         system("clear");
         ioctl(0, TIOCGWINSZ, &w);
 
-        pos++;
-        if (pos > 0) {
-            for (int i = 0; i < length; i++) {
-                if (pos - i < 0) break;
-                if (pos - i >= w.ws_row - 1) continue;
+        length = w.ws_row / 2;
 
-                color(true, 30, 255, 60);
-                printf("\033[%d;%dH%s\n", pos - i, 1, "a");
+        for (int i = 0; i < matrixTrails.size(); i++) {
+            matrixTrails[i]->y++;
+
+            if (matrixTrails[i]->x > w.ws_col) {
+                matrixTrails.erase(matrixTrails.begin() + i);
+                continue;
             }
 
-            if (pos < w.ws_row - 1) {
+            if (matrixTrails[i]->y - length > w.ws_row) {
+                matrixTrails.erase(matrixTrails.begin() + i);
+                continue;
+            }
+
+            if (matrixTrails[i]->y < w.ws_row) {
                 color(true, 255, 255, 255);
-                printf("\033[%d;%dH%s\n", pos, 1, "a");
+                printf("\033[%d;%dH%s\n", matrixTrails[i]->y, matrixTrails[i]->x, "a");
+            }
+
+            for (int j = 0; j < length; j++) {
+                if (matrixTrails[i]->y - j < 0) break;
+                if (matrixTrails[i]->y - j >= w.ws_row) continue;
+
+                color(true, 30, 180, 60);
+                printf("\033[%d;%dH%s\n", matrixTrails[i]->y - j, matrixTrails[i]->x, "a");
             }
         }
 
-        if (pos - length >= w.ws_row - 1) {
-            pos = 0;
-        }
-
-        usleep(150000);
+        usleep(90000);
     }
 
     system("clear");
