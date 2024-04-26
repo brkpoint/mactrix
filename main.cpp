@@ -16,13 +16,13 @@ unsigned int microsecond = 1000000;
 \033[48;2;<r>;<g>;<b>m   Select RGB background color
 */
 
-class trails {
+class trail {
     public:
         int x;
         int y;
         vector<char> chl;
         
-        trails(int x, int y) {
+        trail(int x, int y) {
             this->x = x;
             this->y = y;
         }
@@ -45,35 +45,33 @@ void color(bool fob, int r, int g, int b) {
     printf("\033[48;2;%d;%d;%dm", r, g, b);
 }
 
+void clear(winsize& w) {
+    system("clear");
+    for (int i = 0; i < w.ws_row - 1; i++) {
+        printf("%s", string(w.ws_col, ' ').c_str());
+    }    
+}
+
 int main() {
     cout << "\x1b[?25l" << flush; // hide cursor
     color(true, 255, 255, 255);
-
-    system("clear");
 
     struct winsize w;
     struct winsize wl;
     int frame = 0;
 
+    clear(w);
+
     int length = 0;
-    vector<trails*> matrixTrails;
+    vector<trail*> trails;
 
     random_device dev;
     mt19937 rng(dev());
-
-    for (int i = 0; i < w.ws_row - 1; i++) {
-        printf("%s", string(w.ws_col, ' ').c_str());
-    }
     
     while (true) {
         ioctl(0, TIOCGWINSZ, &w);
 
-        if (w.ws_col != wl.ws_col || w.ws_row != wl.ws_row) {
-            system("clear");
-            for (int i = 0; i < w.ws_row - 1; i++) {
-                printf("%s", string(w.ws_col, ' ').c_str());
-            }
-        }
+        if (w.ws_col != wl.ws_col || w.ws_row != wl.ws_row) clear(w);
 
         frame++;
         length = w.ws_row / 2;
@@ -81,43 +79,42 @@ int main() {
         uniform_int_distribution<mt19937::result_type> xrandom(0, w.ws_col);
         uniform_int_distribution<mt19937::result_type> yrandom(-5, 0);
 
-        matrixTrails.push_back(new trails(xrandom(rng), yrandom(rng)));
-        matrixTrails.push_back(new trails(xrandom(rng), yrandom(rng)));
-        matrixTrails.push_back(new trails(xrandom(rng), yrandom(rng)));
-        matrixTrails.push_back(new trails(xrandom(rng), yrandom(rng)));
+        for (int i = 0; i < w.ws_col / 45; i++) {
+            trails.push_back(new trail(xrandom(rng), yrandom(rng)));
+        }
 
-        for (int i = 0; i < matrixTrails.size(); i++) {
+        for (int i = 0; i < trails.size(); i++) {
             char current = (char)rand() % 26 + 97;
 
-            if (matrixTrails[i]->x > w.ws_col) {
-                matrixTrails.erase(matrixTrails.begin() + i);
+            if (trails[i]->x > w.ws_col) {
+                trails.erase(trails.begin() + i);
                 continue;
             }
 
-            if (matrixTrails[i]->y - length - 1 > 0 && matrixTrails[i]->y - length - 1 < w.ws_row) printf("\033[%d;%dH%c\n", matrixTrails[i]->y - length - 1, matrixTrails[i]->x, ' ');
+            if (trails[i]->y - length - 1 > 0 && trails[i]->y - length - 1 < w.ws_row) printf("\033[%d;%dH%c\n", trails[i]->y - length - 1, trails[i]->x, ' ');
 
-            if (matrixTrails[i]->y - length > w.ws_row) {
-                matrixTrails.erase(matrixTrails.begin() + i);
+            if (trails[i]->y - length > w.ws_row) {
+                trails.erase(trails.begin() + i);
                 continue;
             }
 
             for (int j = 0; j < length; j++) {
-                trails* tcoords = new trails(matrixTrails[i]->x, matrixTrails[i]->y - j - 1);
+                trail* tcoords = new trail(trails[i]->x, trails[i]->y - j - 1);
 
                 if (tcoords->y < 0) break;
                 if (tcoords->y >= w.ws_row) continue;
 
                 color(true, 30, 180, 60);
-                printf("\033[%d;%dH%c\n", tcoords->y, tcoords->x, matrixTrails[i]->chl.at(j));
+                printf("\033[%d;%dH%c\n", tcoords->y, tcoords->x, trails[i]->chl.at(j));
             }
             
-            if (matrixTrails[i]->y < w.ws_row && matrixTrails[i]->y > 0) {
+            if (trails[i]->y < w.ws_row && trails[i]->y > 0) {
                 color(true, 255, 255, 255);
-                printf("\033[%d;%dH%c\n", matrixTrails[i]->y, matrixTrails[i]->x, current);
+                printf("\033[%d;%dH%c\n", trails[i]->y, trails[i]->x, current);
             }
 
-            matrixTrails[i]->y++;
-            matrixTrails[i]->chl.insert(matrixTrails[i]->chl.begin(), current);
+            trails[i]->y++;
+            trails[i]->chl.insert(trails[i]->chl.begin(), current);
         }
 
         wl = w;
