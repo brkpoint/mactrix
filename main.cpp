@@ -70,21 +70,29 @@ int main() {
     while (true) {
         ioctl(0, TIOCGWINSZ, &w);
 
-        if (w.ws_col != wl.ws_col || w.ws_row != wl.ws_row)
+        if (w.ws_col != wl.ws_col || w.ws_row != wl.ws_row) {
             clear(w);
+            trails.clear();
+            wl = w;
+            continue;
+        }
 
         frame++;
         length = w.ws_row / 2;
 
         uniform_int_distribution<mt19937::result_type> xrandom(0, w.ws_col);
-        uniform_int_distribution<mt19937::result_type> yrandom(-5, 0);
+        uniform_int_distribution<mt19937::result_type> yrandom(-length + 2, 0);
 
-        for (int i = 0; i < w.ws_col / 45; i++) {
-            trails.push_back(new trail(xrandom(rng), yrandom(rng)));
-        }
+        if (frame % 10 == 0)
+            for (int i = 0; i < w.ws_col / 5; i++) {
+                trails.push_back(new trail(xrandom(rng), yrandom(rng)));
+            }
 
         for (int i = 0; i < trails.size(); i++) {
             char current = (char)rand() % 26 + 97;
+
+            if (trails[i]->chl.size() > length)
+                trails[i]->chl.erase(trails[i]->chl.begin() + length, trails[i]->chl.end());
 
             if (trails[i]->x > w.ws_col) {
                 trails.erase(trails.begin() + i);
@@ -100,13 +108,11 @@ int main() {
             }
 
             for (int j = 0; j < length; j++) {
-                trail* tcoords = new trail(trails[i]->x, trails[i]->y - j - 1);
-
-                if (tcoords->y < 0) break;
-                if (tcoords->y >= w.ws_row) continue;
+                if (trails[i]->y - j - 1 < 0) break;
+                if (trails[i]->y - j - 1 >= w.ws_row) continue;
 
                 color(true, 30, 180, 60);
-                printf("\033[%d;%dH%c\n", tcoords->y, tcoords->x, trails[i]->chl.at(j));
+                printf("\033[%d;%dH%c\n", trails[i]->y - j - 1, trails[i]->x, trails[i]->chl.at(j));
             }
             
             if (trails[i]->y < w.ws_row && trails[i]->y > 0) {
@@ -119,7 +125,7 @@ int main() {
         }
 
         wl = w;
-        usleep(90000);
+        usleep(70000);
     }
 
     system("clear");
