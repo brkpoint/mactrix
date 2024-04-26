@@ -1,35 +1,36 @@
 #include <iostream>
-#include <random>
-#include <vector>
-#include <array>
+#include <cstdlib>
 #include <sys/ioctl.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <random>
+#include <vector>
+#include <array>
 
 using namespace std;
 
 unsigned int microsecond = 1000000;
-
-template <typename T>
-T clip(const T& n, const T& lower, const T& upper) {
-  return max(lower, min(n, upper));
-}
 
 /*
 \033[38;2;<r>;<g>;<b>m   Select RGB foreground color
 \033[48;2;<r>;<g>;<b>m   Select RGB background color
 */
 
-class coordinates {
+class trails {
     public:
         int x;
         int y;
+        vector<char> chl;
         
-        coordinates(int x, int y) {
+        trails(int x, int y) {
             this->x = x;
             this->y = y;
         }
 };
+
+template <typename T> T clip(const T& n, const T& lower, const T& upper) {
+  return max(lower, min(n, upper));
+}
 
 void color(bool fob, int r, int g, int b) {
     clip(r, 0, 255);
@@ -44,15 +45,6 @@ void color(bool fob, int r, int g, int b) {
     printf("\033[48;2;%d;%d;%dm", r, g, b);
 }
 
-void printToCoords(coordinates* coords, const char *format, ...) {
-    va_list args;
-    va_start(args, format);
-    printf("\033[%d;%dH", coords->x, coords->y);
-    vprintf(format, args);
-    va_end(args);
-    fflush(stdout);
-}
-
 int main() {
     cout << "\x1b[?25l" << flush; // hide cursor
     color(true, 255, 255, 255);
@@ -60,38 +52,49 @@ int main() {
     system("clear");
 
     struct winsize w;
+    struct winsize wl;
     int frame = 0;
 
     int length = 0;
-    vector<coordinates*> matrixTrails;
+    vector<trails*> matrixTrails;
 
     random_device dev;
     mt19937 rng(dev());
+
+    for (int i = 0; i < w.ws_row - 1; i++) {
+        printf("%s", string(w.ws_col, ' ').c_str());
+    }
     
     while (true) {
-        system("clear");
         ioctl(0, TIOCGWINSZ, &w);
+
+        if (w.ws_col != wl.ws_col || w.ws_row != wl.ws_row) {
+            system("clear");
+            for (int i = 0; i < w.ws_row - 1; i++) {
+                printf("%s", string(w.ws_col, ' ').c_str());
+            }
+        }
 
         frame++;
         length = w.ws_row / 2;
 
-        for (int i = 0; i < w.ws_row - 1; i++) {
-            printf(string(w.ws_col, ' ').c_str());
-        }
-
         uniform_int_distribution<mt19937::result_type> xrandom(0, w.ws_col);
         uniform_int_distribution<mt19937::result_type> yrandom(-5, 0);
 
-        matrixTrails.push_back(new coordinates(xrandom(rng), yrandom(rng)));
-        matrixTrails.push_back(new coordinates(xrandom(rng), yrandom(rng)));
+        matrixTrails.push_back(new trails(xrandom(rng), yrandom(rng)));
+        matrixTrails.push_back(new trails(xrandom(rng), yrandom(rng)));
+        matrixTrails.push_back(new trails(xrandom(rng), yrandom(rng)));
+        matrixTrails.push_back(new trails(xrandom(rng), yrandom(rng)));
 
         for (int i = 0; i < matrixTrails.size(); i++) {
-            matrixTrails[i]->y++;
+            char current = (char)rand() % 26 + 97;
 
             if (matrixTrails[i]->x > w.ws_col) {
                 matrixTrails.erase(matrixTrails.begin() + i);
                 continue;
             }
+
+            if (matrixTrails[i]->y - length - 1 > 0 && matrixTrails[i]->y - length - 1 < w.ws_row) printf("\033[%d;%dH%c\n", matrixTrails[i]->y - length - 1, matrixTrails[i]->x, ' ');
 
             if (matrixTrails[i]->y - length > w.ws_row) {
                 matrixTrails.erase(matrixTrails.begin() + i);
@@ -99,23 +102,25 @@ int main() {
             }
 
             for (int j = 0; j < length; j++) {
-                coordinates* tcoords = new coordinates(matrixTrails[i]->x, matrixTrails[i]->y - j - 1);
+                trails* tcoords = new trails(matrixTrails[i]->x, matrixTrails[i]->y - j - 1);
 
-                if (tcoords->y - 1 < 0) break;
+                if (tcoords->y < 0) break;
                 if (tcoords->y >= w.ws_row) continue;
 
                 color(true, 30, 180, 60);
-                //printToCoords(tcoords, "%s", "a");
-                printf("\033[%d;%dH%s\n", tcoords->y, tcoords->x, "a");
+                printf("\033[%d;%dH%c\n", tcoords->y, tcoords->x, matrixTrails[i]->chl.at(j));
+            }
+            
+            if (matrixTrails[i]->y < w.ws_row && matrixTrails[i]->y > 0) {
+                color(true, 255, 255, 255);
+                printf("\033[%d;%dH%c\n", matrixTrails[i]->y, matrixTrails[i]->x, current);
             }
 
-            if (matrixTrails[i]->y < w.ws_row) {
-                color(true, 255, 255, 255);
-                //printToCoords(matrixTrails[i], "%s", "a");
-                printf("\033[%d;%dH%s\n", matrixTrails[i]->y, matrixTrails[i]->x, "a");
-            }
+            matrixTrails[i]->y++;
+            matrixTrails[i]->chl.insert(matrixTrails[i]->chl.begin(), current);
         }
 
+        wl = w;
         usleep(90000);
     }
 
