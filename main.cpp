@@ -5,7 +5,6 @@
 #include <unistd.h>
 #include <random>
 #include <vector>
-#include <array>
 
 using namespace std;
 
@@ -29,7 +28,7 @@ class trail {
 };
 
 template <typename T> T clip(const T& n, const T& lower, const T& upper) {
-  return max(lower, min(n, upper));
+    return max(lower, min(n, upper));
 }
 
 void color(bool fob, int r, int g, int b) {
@@ -71,7 +70,8 @@ int main() {
     while (true) {
         ioctl(0, TIOCGWINSZ, &w);
 
-        if (w.ws_col != wl.ws_col || w.ws_row != wl.ws_row) clear(w);
+        if (w.ws_col != wl.ws_col || w.ws_row != wl.ws_row)
+            clear(w);
 
         frame++;
         length = w.ws_row / 2;
@@ -91,7 +91,8 @@ int main() {
                 continue;
             }
 
-            if (trails[i]->y - length - 1 > 0 && trails[i]->y - length - 1 < w.ws_row) printf("\033[%d;%dH%c\n", trails[i]->y - length - 1, trails[i]->x, ' ');
+            if (trails[i]->y - length - 1 > 0 && trails[i]->y - length - 1 < w.ws_row)
+                printf("\033[%d;%dH%c\n", trails[i]->y - length - 1, trails[i]->x, ' ');
 
             if (trails[i]->y - length > w.ws_row) {
                 trails.erase(trails.begin() + i);
