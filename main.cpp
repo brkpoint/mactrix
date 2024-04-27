@@ -3,6 +3,7 @@
 #include <sys/ioctl.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <termios.h>
 #include <random>
 #include <vector>
 
@@ -31,6 +32,25 @@ template <typename T> T clip(const T& n, const T& lower, const T& upper) {
     return max(lower, min(n, upper));
 }
 
+
+int _kbhit() {
+    static const int STDIN = 0;
+    static bool initialized = false;
+ 
+    if (! initialized) {
+        termios term;
+        tcgetattr(STDIN, &term);
+        term.c_lflag &= ~ICANON;
+        tcsetattr(STDIN, TCSANOW, &term);
+        setbuf(stdin, NULL);
+        initialized = true;
+    }
+ 
+    int bytesWaiting;
+    ioctl(STDIN, FIONREAD, &bytesWaiting);
+    return bytesWaiting;
+}
+
 void color(bool fob, int r, int g, int b) {
     clip(r, 0, 255);
     clip(g, 0, 255);
@@ -52,9 +72,11 @@ void clear(winsize& w) {
 }
 
 int main() {
+    system("stty raw");
     cout << "\x1b[?25l" << flush; // hide cursor
     color(true, 255, 255, 255);
 
+    struct termios t;
     struct winsize w;
     struct winsize wl;
     int frame = 0;
@@ -76,6 +98,8 @@ int main() {
             wl = w;
             continue;
         }
+
+        if (_kbhit()) break;
 
         frame++;
         length = w.ws_row / 2;
@@ -122,8 +146,8 @@ int main() {
     }
 
     system("clear");
-
-    cout << "\033[0m"; // reset colors
+    system("stty cooked");
+    cout << "\033[0m" << flush; // reset colors
     cout << "\x1b[?25h" << flush; // show cursor
     return 0;
 }
