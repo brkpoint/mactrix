@@ -1,11 +1,11 @@
 #include <iostream>
-#include <cstdlib>
 #include <sys/ioctl.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <termios.h>
+#include <fcntl.h>
 #include <random>
 #include <vector>
+
 
 using namespace std;
 
@@ -32,23 +32,24 @@ template <typename T> T clip(const T& n, const T& lower, const T& upper) {
     return max(lower, min(n, upper));
 }
 
+char inpchar() {
+    char ch;
+    struct termios oldt, newt;
+    int oldf;
 
-int _kbhit() {
-    static const int STDIN = 0;
-    static bool initialized = false;
- 
-    if (! initialized) {
-        termios term;
-        tcgetattr(STDIN, &term);
-        term.c_lflag &= ~ICANON;
-        tcsetattr(STDIN, TCSANOW, &term);
-        setbuf(stdin, NULL);
-        initialized = true;
-    }
- 
-    int bytesWaiting;
-    ioctl(STDIN, FIONREAD, &bytesWaiting);
-    return bytesWaiting;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
+    fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
+
+    ch = getchar();
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    fcntl(STDIN_FILENO, F_SETFL, oldf);
+
+    return ch;
 }
 
 void color(bool fob, int r, int g, int b) {
@@ -99,7 +100,7 @@ int main() {
             continue;
         }
 
-        if (_kbhit()) break;
+        if (inpchar() == 'q') break;
 
         frame++;
         length = w.ws_row / 2;
