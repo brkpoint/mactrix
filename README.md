@@ -11,4 +11,4 @@ It could not work on mac's default terminal (idk how to set 256 bit colors on it
 Compile with -O3 flag (faster program)
 
 ## Usage:
-Quit by clicking "q".
+Quit by clicking 'q'.
