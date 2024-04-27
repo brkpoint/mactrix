@@ -83,10 +83,8 @@ int main() {
         uniform_int_distribution<mt19937::result_type> xrandom(0, w.ws_col);
         uniform_int_distribution<mt19937::result_type> yrandom(-length + 2, 0);
 
-        if (frame % 10 == 0)
-            for (int i = 0; i < w.ws_col / 5; i++) {
-                trails.push_back(new trail(xrandom(rng), yrandom(rng)));
-            }
+        trails.push_back(new trail(xrandom(rng), yrandom(rng)));
+        trails.push_back(new trail(xrandom(rng), yrandom(rng)));
 
         for (int i = 0; i < trails.size(); i++) {
             char current = (char)rand() % 26 + 97;
@@ -107,11 +105,11 @@ int main() {
                 continue;
             }
 
+            color(true, 30, 180, 60);
             for (int j = 0; j < length; j++) {
                 if (trails[i]->y - j - 1 < 0) break;
                 if (trails[i]->y - j - 1 >= w.ws_row) continue;
 
-                color(true, 30, 180, 60);
                 printf("\033[%d;%dH%c\n", trails[i]->y - j - 1, trails[i]->x, trails[i]->chl.at(j));
             }
             
