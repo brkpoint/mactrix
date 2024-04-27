@@ -27,10 +27,6 @@ class trail {
         }
 };
 
-template <typename T> T clip(const T& n, const T& lower, const T& upper) {
-    return max(lower, min(n, upper));
-}
-
 char inpchar() {
     char ch;
     struct termios oldt, newt;
@@ -52,10 +48,6 @@ char inpchar() {
 }
 
 void color(bool fob, int r, int g, int b) {
-    clip(r, 0, 255);
-    clip(g, 0, 255);
-    clip(b, 0, 255);
-
     if (fob) {
         printf("\033[38;2;%d;%d;%dm", r, g, b);
         return;
@@ -71,17 +63,21 @@ void clear(winsize& w) {
     }    
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     system("stty raw");
     cout << "\x1b[?25l" << flush; // hide cursor
     color(true, 255, 255, 255);
 
-    struct termios t;
     struct winsize w;
     struct winsize wl;
+    clear(w);
     int frame = 0;
 
-    clear(w);
+    int speed = 30;
+
+    if (argc >= 2) {
+        speed = stoi(argv[1]);
+    }
 
     int length = 0;
     vector<trail*> trails;
@@ -142,7 +138,7 @@ int main() {
         }
 
         wl = w;
-        usleep(70000);
+        usleep(100000 - speed * 1000);
     }
 
     system("clear");
