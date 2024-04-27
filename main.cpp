@@ -92,11 +92,6 @@ int main() {
             if (trails[i]->chl.size() > length)
                 trails[i]->chl.erase(trails[i]->chl.begin() + length, trails[i]->chl.end());
 
-            if (trails[i]->x > w.ws_col) {
-                trails.erase(trails.begin() + i);
-                continue;
-            }
-
             if (trails[i]->y - length > w.ws_row) {
                 trails.erase(trails.begin() + i);
                 continue;
