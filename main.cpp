@@ -6,7 +6,6 @@
 #include <random>
 #include <vector>
 
-
 using namespace std;
 
 unsigned int microsecond = 1000000;
