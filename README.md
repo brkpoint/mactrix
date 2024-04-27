@@ -9,3 +9,6 @@ It could not work on mac's default terminal (idk how to set 256 bit colors on it
 
 ## Compiling:
 Compile with O2 flag (faster program)
+
+## Usage:
+Quit by clicking any button.
