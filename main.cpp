@@ -97,13 +97,13 @@ int main() {
                 continue;
             }
 
-            if (trails[i]->y - length - 1 > 0 && trails[i]->y - length - 1 < w.ws_row)
-                printf("\033[%d;%dH%c\n", trails[i]->y - length - 1, trails[i]->x, ' ');
-
             if (trails[i]->y - length > w.ws_row) {
                 trails.erase(trails.begin() + i);
                 continue;
             }
+
+            if (trails[i]->y - length - 1 > 0)
+                printf("\033[%d;%dH%c\n", trails[i]->y - length - 1, trails[i]->x, ' ');
 
             color(true, 30, 180, 60);
             for (int j = 0; j < length; j++) {
