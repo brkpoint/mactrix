@@ -8,13 +8,6 @@
 
 using namespace std;
 
-void clear(winsize& w) {
-    system("clear");
-    for (int i = 0; i < w.ws_row - 1; i++) {
-        printf("%s", string(w.ws_col, ' ').c_str());
-    }    
-}
-
 int main(int argc, char* argv[]) {
     // setting up input
     system("stty raw");
@@ -32,10 +25,6 @@ int main(int argc, char* argv[]) {
     // terminal sizing
     struct winsize w;
     struct winsize wl;
-    
-    ioctl(0, TIOCGWINSZ, &w);
-
-    clear(w);
 
     // speed
     int speed = 30;
@@ -59,19 +48,23 @@ int main(int argc, char* argv[]) {
 
         // size changed
         if (w.ws_col != wl.ws_col || w.ws_row != wl.ws_row) {
-            clear(w);
+            // clearing the screen
+            system("clear");
+            for (int i = 0; i < w.ws_row - 1; i++) {
+                printf("%s", string(w.ws_col, ' ').c_str());
+            }
 
+            // clear the trails to restart the sim
             trails.clear();
             lastchars.clear();
 
             wl = w;
-            ioctl(0, TIOCGWINSZ, &w);
 
             length = w.ws_row / 2;
             continue;
         }
 
-        if (getchar() == 'q') break;
+        if (getchar() == 'q') break; // if 'q' is pressed quit
 
         // gen new numbers
         uniform_int_distribution<mt19937::result_type> xrandom(0, w.ws_col);
@@ -80,6 +73,7 @@ int main(int argc, char* argv[]) {
         // push first random trail
         trails.push_back(make_pair(xrandom(rng), yrandom(rng)));
         lastchars.push_back(' ');
+
         //push second random trail
         trails.push_back(make_pair(xrandom(rng), yrandom(rng)));
         lastchars.push_back(' ');
@@ -105,7 +99,7 @@ int main(int argc, char* argv[]) {
             if (trails[i].second < w.ws_row && trails[i].second > 0) {
                 char current = (char)rand() % 26 + 97; // gen random char
                 printf("\033[38;2;%d;%d;%dm", 255, 255, 255); // color to white
-                printf("\033[%d;%dH%c\n", trails[i].second, trails[i].first, current);
+                printf("\033[%d;%dH%c\n", trails[i].second, trails[i].first, current); // print the char
                 lastchars[i] = current;
             }
 
